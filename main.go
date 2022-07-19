@@ -2,13 +2,19 @@ package main
 
 import (
 	"Restapi/controllers"
+	"Restapi/database"
 	"Restapi/entity"
+	"log"
 	"net/http"
 
+	// "net/http"
+	"fmt"
+
 	"github.com/gorilla/mux"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-var profiles []entity.Profile = []entity.Profile{}
+// var profiles []entity.Profile = []entity.Profile{}
 
 /*
 // type User struct {
@@ -101,17 +107,42 @@ func deleteProfiles(q http.ResponseWriter, r *http.Request) {
 }
 */
 func main() {
-	router := mux.NewRouter()
+	initDB()
+	log.Println("Starting the HTTP server on port 8090")
 
+	router := mux.NewRouter().StrictSlash(true)
+	initaliseHandlers(router)
+	log.Fatal(http.ListenAndServe(":8090", router))
+
+}
+func initDB() {
+	config :=
+		database.Config{
+			ServerName: "localhost:3306",
+			User:       "root",
+			Password:   "root",
+			DB:         "employee",
+		}
+
+	connectionString := database.GetConnectionString(config)
+	err := database.Connect(connectionString)
+	if err != nil {
+		panic(err.Error())
+	}
+	database.Migrate(&entity.Profile{})
+}
+func initaliseHandlers(router *mux.Router) {
+
+	fmt.Println("In main.go , router")
 	router.HandleFunc("/profiles", controllers.AddItem).Methods("POST")
 
-	router.HandleFunc("/profiles", getAllProfiles).Methods("GET")
+	router.HandleFunc("/profiles", controllers.GetAllProfiles).Methods("GET")
 
-	router.HandleFunc("/profiles/{id}", getProfiles).Methods("GET")
+	router.HandleFunc("/profiles/{id}", controllers.GetProfiles).Methods("GET")
 
-	router.HandleFunc("/profiles/{id}", updateProfiles).Methods("PUT")
+	router.HandleFunc("/profiles/{id}", controllers.UpdateProfiles).Methods("PUT")
 
-	router.HandleFunc("/profiles/{id}", deleteProfiles).Methods("DELETE")
+	router.HandleFunc("/profiles/{id}", controllers.DeleteProfiles).Methods("DELETE")
 
-	http.ListenAndServe(":5001", router)
+	// http.ListenAndServe(":5001", router)
 }
