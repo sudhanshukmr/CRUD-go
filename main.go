@@ -50,5 +50,4 @@ func initaliseHandlers(router *mux.Router) {
 
 	router.HandleFunc("/profiles/{id}", controllers.DeleteProfiles).Methods("DELETE")
 
-	// http.ListenAndServe(":5001", router)
 }
